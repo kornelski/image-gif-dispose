@@ -5,10 +5,11 @@ license = "MIT/Apache-2.0"
 readme = "README.md"
 description = "Implements GIF disposal method for the gif crate. The gif crate only exposes raw frame data that is not sufficient to render GIFs properly. GIF requires special composing of frames which, as this crate shows, is non-trivial."
 keywords = ["gif", "frames", "animation"]
-version = "1.0.0"
+version = "1.0.1"
 documentation = "https://docs.rs/gif-dispose/"
 homepage = "https://github.com/pornel/image-gif-dispose#readme"
 repository = "https://github.com/pornel/image-gif-dispose.git"
+categories = [ "multimedia::video", "multimedia::images" ]
 
 [dependencies]
 gif = "0.9.0"
