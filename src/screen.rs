@@ -1,20 +1,30 @@
+//! ```rust,ignore
+//! let file = File::open("example.gif")?;
+//! let mut decoder = Decoder::new(file);
+//!
+//! // Important:
+//! decoder.set(gif::ColorOutput::Indexed);
+//!
+//! let mut reader = decoder.read_info()?;
+//!
+//! let mut screen = Screen::new_reader(&reader);
+//! while let Some(frame) = reader.read_next_frame()? {
+//!     screen.blit_frame(&frame)?;
+//!     screen.pixels // that's the frame now
+//! }
+//! ```
 
 use gif;
 use disposal::Disposal;
 use rgb::*;
+use imgref::*;
 use subimage::Subimage;
 use std::io;
 use std::error::Error;
 
 pub struct Screen {
     /// Result of combining frames
-    pub pixels: Vec<RGBA8>,
-
-    /// Width of the screen
-    pub width: usize,
-
-    /// Height of the screen
-    pub height: usize,
+    pub pixels: ImgVec<RGBA8>,
 
     global_pal: Option<Vec<RGBA8>>,
     bg_color: RGBA8,
@@ -24,47 +34,55 @@ pub struct Screen {
 impl Screen {
 
     /// Initialize empty screen from GIF Reader.
+    ///
     /// Make sure Reader is set to use Indexed color.
     /// `decoder.set(gif::ColorOutput::Indexed);`
-    pub fn new<T: io::Read>(reader: &gif::Reader<T>) -> Self {
+    pub fn new_reader<T: io::Read>(reader: &gif::Reader<T>) -> Self {
         let pal = reader.global_palette().map(|palette_bytes| to_rgba(palette_bytes));
 
-        let pixels = reader.width() as usize * reader.height() as usize;
         let bg_color = if let (Some(bg_index), Some(pal)) = (reader.bg_color(), pal.as_ref()) {
             pal[bg_index]
         } else {
             RGBA8::new(0,0,0,0)
         };
+        Self::new(reader.width() as usize, reader.height() as usize, bg_color, pal)
+    }
 
+    pub fn new(width: usize, height: usize, bg_color: RGBA8, global_pal: Option<Vec<RGBA8>>) -> Self {
         Screen {
-            pixels: vec![bg_color; pixels],
-            width: reader.width() as usize,
-            height: reader.height() as usize,
-            global_pal: pal,
-            bg_color: bg_color,
+            pixels: Img::new(vec![bg_color; width * height], width, height),
+            global_pal,
+            bg_color,
             disposal: Disposal::default(),
         }
     }
 
+
     /// Advance the screen by one frame.
-    /// The result will be in `screen.pixels`
-    pub fn blit(&mut self, frame: &gif::Frame) -> Result<(), Box<Error>> {
+    ///
+    /// The result will be in `screen.pixels.buf`
+    pub fn blit_frame(&mut self, frame: &gif::Frame) -> Result<ImgRef<RGBA8>, Box<Error>> {
         let local_pal : Option<Vec<_>> = frame.palette.as_ref().map(|bytes| to_rgba(bytes));
-        let pal = local_pal.as_ref().or(self.global_pal.as_ref()).ok_or("the frame must have _some_ palette")?;
+        self.blit(local_pal.as_ref().map(|x| &x[..]), frame.dispose,
+            frame.left, frame.top,
+            ImgRef::new(&frame.buffer, frame.width as usize, frame.height as usize), frame.transparent)
+    }
 
-        self.disposal.dispose(&mut self.pixels, self.width, self.bg_color);
-        self.disposal = Disposal::new(&frame, &self.pixels, self.width);
+    pub fn blit(&mut self, local_pal: Option<&[RGBA8]>, method: gif::DisposalMethod, left: u16, top: u16, buffer: ImgRef<u8>, transparent: Option<u8>) -> Result<ImgRef<RGBA8>, Box<Error>> {
+        let pal = local_pal.or(self.global_pal.as_ref().map(|x| &x[..])).ok_or("the frame must have _some_ palette")?;
 
-        for (dst, &src) in self.pixels.iter_mut().subimage(frame.left as usize, frame.top as usize, frame.width as usize, frame.height as usize, self.width).zip(frame.buffer.iter()) {
-            if let Some(transparent) = frame.transparent {
-                if src == transparent {
-                    continue;
-                }
+        let stride = self.pixels.width();
+        self.disposal.dispose(&mut self.pixels.buf, stride, self.bg_color);
+        self.disposal = Disposal::new(method, left, top, buffer.width() as u16, buffer.height() as u16, self.pixels.as_ref());
+
+        for (dst, &src) in self.pixels.buf.iter_mut().subimage(left as usize, top as usize, buffer.width(), buffer.height(), stride).zip(buffer.iter()) {
+            if Some(src) == transparent {
+                continue;
             }
             *dst = pal[src as usize];
         }
 
-        Ok(())
+        Ok(self.pixels.as_ref())
     }
 }
 

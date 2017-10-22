@@ -22,6 +22,7 @@
 
 extern crate gif;
 extern crate rgb;
+extern crate imgref;
 
 mod subimage;
 mod disposal;

@@ -15,9 +15,9 @@ decoder.set(gif::ColorOutput::Indexed);
 
 let mut reader = decoder.read_info()?;
 
-let mut screen = Screen::new(&reader);
+let mut screen = Screen::new_reader(&reader);
 while let Some(frame) = reader.read_next_frame()? {
-    screen.blit(&frame)?;
+    screen.blit_frame(&frame)?;
     screen.pixels // that's the frame now
 }
 ```

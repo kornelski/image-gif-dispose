@@ -1,6 +1,7 @@
 
 use gif;
 use gif::DisposalMethod::*;
+use imgref::*;
 use subimage::Subimage;
 use std::default::Default;
 
@@ -37,17 +38,13 @@ impl<Pixel: Copy> Disposal<Pixel> {
         }
     }
 
-    pub fn new(frame: &gif::Frame, pixels: &[Pixel], stride: usize) -> Self {
+    pub fn new(method: gif::DisposalMethod, left: u16, top: u16, width: u16, height: u16, pixels: ImgRef<Pixel>) -> Self {
         Disposal {
-            method: frame.dispose,
-            left: frame.left,
-            top: frame.top,
-            width: frame.width,
-            height: frame.height,
-            previous_pixels: match frame.dispose {
-                Previous => Some(pixels.iter().cloned().subimage(frame.left as usize, frame.top as usize, frame.width as usize, frame.height as usize, stride).collect()),
+            previous_pixels: match method {
+                Previous => Some(pixels.iter().cloned().subimage(left as usize, top as usize, width as usize, height as usize, pixels.stride()).collect()),
                 _ => None,
             },
+            method, left, top, width, height,
         }
     }
 }
