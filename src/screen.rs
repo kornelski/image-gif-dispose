@@ -20,7 +20,7 @@ use rgb::*;
 use imgref::*;
 use subimage::Subimage;
 use std::io;
-use std::error::Error;
+use super::Error;
 
 pub struct Screen {
     /// Result of combining frames
@@ -61,15 +61,15 @@ impl Screen {
     /// Advance the screen by one frame.
     ///
     /// The result will be in `screen.pixels.buf`
-    pub fn blit_frame(&mut self, frame: &gif::Frame) -> Result<ImgRef<RGBA8>, Box<Error>> {
+    pub fn blit_frame(&mut self, frame: &gif::Frame) -> Result<ImgRef<RGBA8>, Error> {
         let local_pal : Option<Vec<_>> = frame.palette.as_ref().map(|bytes| to_rgba(bytes));
         self.blit(local_pal.as_ref().map(|x| &x[..]), frame.dispose,
             frame.left, frame.top,
             ImgRef::new(&frame.buffer, frame.width as usize, frame.height as usize), frame.transparent)
     }
 
-    pub fn blit(&mut self, local_pal: Option<&[RGBA8]>, method: gif::DisposalMethod, left: u16, top: u16, buffer: ImgRef<u8>, transparent: Option<u8>) -> Result<ImgRef<RGBA8>, Box<Error>> {
-        let pal = local_pal.or(self.global_pal.as_ref().map(|x| &x[..])).ok_or("the frame must have _some_ palette")?;
+    pub fn blit(&mut self, local_pal: Option<&[RGBA8]>, method: gif::DisposalMethod, left: u16, top: u16, buffer: ImgRef<u8>, transparent: Option<u8>) -> Result<ImgRef<RGBA8>, Error> {
+        let pal = local_pal.or(self.global_pal.as_ref().map(|x| &x[..])).ok_or(Error::NoPalette)?;
 
         let stride = self.pixels.width();
         self.disposal.dispose(&mut self.pixels.buf, stride, self.bg_color);

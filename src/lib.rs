@@ -29,3 +29,23 @@ mod disposal;
 mod screen;
 
 pub use screen::Screen;
+
+use std::fmt;
+use std::error::Error as StdError;
+
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
+pub enum Error {
+    NoPalette
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(self.description())
+    }
+}
+
+impl StdError for Error {
+    fn description(&self) -> &str {
+        return "No palette";
+    }
+}
