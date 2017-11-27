@@ -13,7 +13,7 @@
 //!
 //! let mut reader = decoder.read_info()?;
 //!
-//! let mut screen = Screen::new(&reader);
+//! let mut screen = Screen::new_reader(&reader);
 //! while let Some(frame) = reader.read_next_frame()? {
 //!     screen.blit(&frame)?;
 //!     screen.pixels // that's the frame now
@@ -29,6 +29,7 @@ mod disposal;
 mod screen;
 
 pub use screen::Screen;
+pub use rgb::{RGB8, RGBA8};
 
 use std::fmt;
 use std::error::Error as StdError;
