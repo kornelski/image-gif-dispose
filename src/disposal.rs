@@ -1,8 +1,7 @@
-
+use crate::subimage::Subimage;
 use gif;
 use gif::DisposalMethod::*;
 use imgref::*;
-use subimage::Subimage;
 use std::default::Default;
 
 pub struct Disposal<Pixel: Copy> {
@@ -38,7 +37,7 @@ impl<Pixel: Copy> Disposal<Pixel> {
         }
     }
 
-    pub fn new(method: gif::DisposalMethod, left: u16, top: u16, width: u16, height: u16, pixels: ImgRef<Pixel>) -> Self {
+    pub fn new(method: gif::DisposalMethod, left: u16, top: u16, width: u16, height: u16, pixels: ImgRef<'_, Pixel>) -> Self {
         Disposal {
             previous_pixels: match method {
                 Previous => Some(pixels.iter().cloned().subimage(left as usize, top as usize, width as usize, height as usize, pixels.stride()).collect()),

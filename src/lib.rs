@@ -20,19 +20,15 @@
 //! }
 //!
 
-extern crate gif;
-extern crate rgb;
-extern crate imgref;
-
-mod subimage;
 mod disposal;
 mod screen;
+mod subimage;
 
-pub use screen::Screen;
+pub use crate::screen::Screen;
 pub use rgb::{RGB8, RGBA8};
 
-use std::fmt;
 use std::error::Error as StdError;
+use std::fmt;
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum Error {
@@ -40,7 +36,7 @@ pub enum Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.description())
     }
 }

@@ -14,13 +14,13 @@
 //! }
 //! ```
 
-use gif;
-use disposal::Disposal;
-use rgb::*;
-use imgref::*;
-use subimage::Subimage;
-use std::io;
 use super::Error;
+use crate::disposal::Disposal;
+use crate::subimage::Subimage;
+use gif;
+use imgref::*;
+use rgb::*;
+use std::io;
 
 /// Combined GIF frames forming a "virtual screen"
 ///
@@ -72,14 +72,14 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
     /// Advance the screen by one frame.
     ///
     /// The result will be in `screen.pixels.buf`
-    pub fn blit_frame(&mut self, frame: &gif::Frame) -> Result<ImgRef<PixelType>, Error> {
+    pub fn blit_frame(&mut self, frame: &gif::Frame<'_>) -> Result<ImgRef<'_, PixelType>, Error> {
         let local_pal : Option<Vec<_>> = frame.palette.as_ref().map(|bytes| convert_pixels(bytes));
         self.blit(local_pal.as_ref().map(|x| &x[..]), frame.dispose,
             frame.left, frame.top,
             ImgRef::new(&frame.buffer, frame.width as usize, frame.height as usize), frame.transparent)
     }
 
-    pub fn blit(&mut self, local_pal: Option<&[PixelType]>, method: gif::DisposalMethod, left: u16, top: u16, buffer: ImgRef<u8>, transparent: Option<u8>) -> Result<ImgRef<PixelType>, Error> {
+    pub fn blit(&mut self, local_pal: Option<&[PixelType]>, method: gif::DisposalMethod, left: u16, top: u16, buffer: ImgRef<'_, u8>, transparent: Option<u8>) -> Result<ImgRef<'_, PixelType>, Error> {
         let pal = local_pal.or(self.global_pal.as_ref().map(|x| &x[..])).ok_or(Error::NoPalette)?;
 
         let stride = self.pixels.width();
