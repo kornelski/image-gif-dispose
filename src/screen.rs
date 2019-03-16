@@ -61,7 +61,7 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
 
     pub fn new(width: usize, height: usize, bg_color: PixelType, global_pal: Option<Vec<PixelType>>) -> Self {
         Screen {
-            pixels: Img::new(vec![bg_color; width * height], width, height),
+            pixels: Img::new(vec![PixelType::default(); width * height], width, height),
             global_pal,
             bg_color,
             disposal: Disposal::default(),
