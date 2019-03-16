@@ -4,7 +4,7 @@ use gif::DisposalMethod::*;
 use imgref::*;
 use std::default::Default;
 
-pub struct Disposal<Pixel: Copy> {
+pub struct Disposal<Pixel> {
     method: gif::DisposalMethod,
     previous_pixels: Option<Vec<Pixel>>,
     left: u16, top: u16,

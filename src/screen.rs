@@ -25,7 +25,7 @@ use std::io;
 /// Combined GIF frames forming a "virtual screen"
 ///
 /// Pixel type can be `RGB8` or `RGBA8`. The size is overall GIF size (grater or equal individual frame sizes).
-pub struct Screen<PixelType: Copy = RGBA8> {
+pub struct Screen<PixelType = RGBA8> {
     /// Result of combining all frames so far. It's in RGB/RGBA.
     pub pixels: ImgVec<PixelType>,
 
