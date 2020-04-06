@@ -16,7 +16,6 @@
 
 use super::Error;
 use crate::disposal::Disposal;
-use gif;
 use imgref::*;
 use rgb::*;
 use std::io;
@@ -118,6 +117,6 @@ fn convert_pixels<T: From<RGB8> + Default>(palette_bytes: &[u8]) -> Vec<T> {
 
 #[test]
 fn screen_rgb_rgba() {
-    let _ = Screen::new(1,1, RGBA8::new(0,0,0,0), None);
-    let _ = Screen::new(1,1, RGB8::new(0,0,0), None);
+    let _ = Screen::new(1, 1, RGBA8::new(0, 0, 0, 0), None);
+    let _ = Screen::new(1, 1, RGB8::new(0, 0, 0), None);
 }

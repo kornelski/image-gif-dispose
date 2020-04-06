@@ -31,7 +31,7 @@ use std::fmt;
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum Error {
-    NoPalette
+    NoPalette,
 }
 
 impl fmt::Display for Error {
