@@ -16,7 +16,6 @@
 
 use super::Error;
 use crate::disposal::Disposal;
-use crate::subimage::Subimage;
 use gif;
 use imgref::*;
 use rgb::*;
@@ -56,7 +55,7 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
         } else {
             PixelType::default()
         };
-        Self::new(reader.width() as usize, reader.height() as usize, bg_color, pal)
+        Self::new(reader.width().into(), reader.height().into(), bg_color, pal)
     }
 
     pub fn new(width: usize, height: usize, bg_color: PixelType, global_pal: Option<Vec<PixelType>>) -> Self {
@@ -68,25 +67,36 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
         }
     }
 
-
     /// Advance the screen by one frame.
     ///
     /// The result will be in `screen.pixels.buf`
     pub fn blit_frame(&mut self, frame: &gif::Frame<'_>) -> Result<ImgRef<'_, PixelType>, Error> {
         let local_pal : Option<Vec<_>> = frame.palette.as_ref().map(|bytes| convert_pixels(bytes));
-        self.blit(local_pal.as_ref().map(|x| &x[..]), frame.dispose,
+        self.blit(local_pal.as_deref(), frame.dispose,
             frame.left, frame.top,
-            ImgRef::new(&frame.buffer, frame.width as usize, frame.height as usize), frame.transparent)
+            ImgRef::new(&frame.buffer, frame.width.into(), frame.height.into()), frame.transparent)
     }
 
+    /// Low-level version of `blit_frame`
     pub fn blit(&mut self, local_pal: Option<&[PixelType]>, method: gif::DisposalMethod, left: u16, top: u16, buffer: ImgRef<'_, u8>, transparent: Option<u8>) -> Result<ImgRef<'_, PixelType>, Error> {
-        let pal = local_pal.or(self.global_pal.as_ref().map(|x| &x[..])).ok_or(Error::NoPalette)?;
+        let mut pal = local_pal.or(self.global_pal.as_deref()).ok_or(Error::NoPalette)?;
+        let mut tmp;
+        // For backwards-compat only
+        if pal.len() < 256 {
+            tmp = Vec::with_capacity(256);
+            tmp.extend_from_slice(pal);
+            while tmp.len() < 256 {
+                tmp.push(Default::default());
+            }
+            pal = &tmp;
+        };
+        // Some images contain out-of-pal colors. The fastest way is to extend the palette instead of doing per-pixel checks.
+        let pal = &pal[0..256];
 
-        let stride = self.pixels.width();
-        self.disposal.dispose(&mut self.pixels.buf, stride, self.bg_color);
+        self.disposal.dispose(self.pixels.as_mut(), self.bg_color);
         self.disposal = Disposal::new(method, left, top, buffer.width() as u16, buffer.height() as u16, self.pixels.as_ref());
 
-        for (dst, &src) in self.pixels.buf.iter_mut().subimage(left as usize, top as usize, buffer.width(), buffer.height(), stride).zip(buffer.iter()) {
+        for (dst, src) in self.pixels.sub_image_mut(left.into(), top.into(), buffer.width(), buffer.height()).pixels_mut().zip(buffer.pixels()) {
             if Some(src) == transparent {
                 continue;
             }
@@ -97,8 +107,13 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
     }
 }
 
-fn convert_pixels<T: From<RGB8>>(palette_bytes: &[u8]) -> Vec<T> {
-    palette_bytes.chunks(3).map(|byte| RGB8{r:byte[0], g:byte[1], b:byte[2]}.into()).collect()
+fn convert_pixels<T: From<RGB8> + Default>(palette_bytes: &[u8]) -> Vec<T> {
+    let mut res = Vec::with_capacity(256);
+    res.extend(palette_bytes.chunks(3).map(|byte| RGB8{r:byte[0], g:byte[1], b:byte[2]}.into()));
+    while res.len() < 256 {
+        res.push(Default::default());
+    }
+    res
 }
 
 #[test]

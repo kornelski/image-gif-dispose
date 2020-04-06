@@ -15,14 +15,13 @@
 //!
 //! let mut screen = Screen::new_reader(&reader);
 //! while let Some(frame) = reader.read_next_frame()? {
-//!     screen.blit(&frame)?;
+//!     screen.blit_frame(&frame)?;
 //!     screen.pixels // that's the frame now
 //! }
 //!
 
 mod disposal;
 mod screen;
-mod subimage;
 
 pub use crate::screen::Screen;
 pub use rgb::{RGB8, RGBA8};
@@ -37,12 +36,8 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.description())
+        f.write_str("No palette")
     }
 }
 
-impl StdError for Error {
-    fn description(&self) -> &str {
-        return "No palette";
-    }
-}
+impl StdError for Error {}

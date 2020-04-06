@@ -1,4 +1,3 @@
-use crate::subimage::Subimage;
 use gif;
 use gif::DisposalMethod::*;
 use imgref::*;
@@ -22,16 +21,15 @@ impl<Pixel: Copy> Default for Disposal<Pixel> {
 }
 
 impl<Pixel: Copy> Disposal<Pixel> {
-    pub fn dispose(&mut self, pixels: &mut [Pixel], stride: usize, bg_color: Pixel) {
+    pub fn dispose(&mut self, mut pixels: ImgRefMut<'_, Pixel>, bg_color: Pixel) {
         if self.width == 0 || self.height == 0 {
             return;
         }
 
-        let pixels_iter = pixels.iter_mut().subimage(self.left as usize, self.top as usize, self.width as usize, self.height as usize, stride);
         match self.method {
-            Background => for px in pixels_iter { *px = bg_color; },
+            Background => for px in pixels.pixels_mut() { *px = bg_color; },
             Previous => if let Some(saved) = self.previous_pixels.take() {
-                for (px, &src) in pixels_iter.zip(saved.iter()) { *px = src; }
+                for (px, &src) in pixels.sub_image_mut(self.left.into(), self.top.into(), self.width.into(), self.height.into()).pixels_mut().zip(saved.iter()) { *px = src; }
             },
             Keep | Any => {},
         }
@@ -40,7 +38,7 @@ impl<Pixel: Copy> Disposal<Pixel> {
     pub fn new(method: gif::DisposalMethod, left: u16, top: u16, width: u16, height: u16, pixels: ImgRef<'_, Pixel>) -> Self {
         Disposal {
             previous_pixels: match method {
-                Previous => Some(pixels.iter().cloned().subimage(left as usize, top as usize, width as usize, height as usize, pixels.stride()).collect()),
+                Previous => Some(pixels.sub_image(left.into(), top.into(), width.into(), height.into()).pixels().collect()),
                 _ => None,
             },
             method, left, top, width, height,
