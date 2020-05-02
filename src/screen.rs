@@ -28,7 +28,6 @@ pub struct Screen<PixelType = RGBA8> {
     pub pixels: ImgVec<PixelType>,
 
     global_pal: Option<Vec<PixelType>>,
-    bg_color: PixelType,
     disposal: Disposal<PixelType>,
 }
 
@@ -49,19 +48,18 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
     pub fn from_reader<T: io::Read>(reader: &gif::Reader<T>) -> Self {
         let pal = reader.global_palette().map(convert_pixels);
 
-        let bg_color = if let (Some(bg_index), Some(pal)) = (reader.bg_color(), pal.as_ref()) {
-            pal[bg_index]
-        } else {
-            PixelType::default()
-        };
-        Self::new(reader.width().into(), reader.height().into(), bg_color, pal)
+        Self::new(reader.width().into(), reader.height().into(), PixelType::default(), pal)
     }
 
-    pub fn new(width: usize, height: usize, bg_color: PixelType, global_pal: Option<Vec<PixelType>>) -> Self {
+    /// Manual setup of the canvas. You probably should use `from_reader` instead.
+    ///
+    /// `bg_color` argument will be ignored. It appears that nobody tries to follow the GIF spec,
+    /// and background must always be transparent.
+    #[inline]
+    pub fn new(width: usize, height: usize, _bg_color: PixelType, global_pal: Option<Vec<PixelType>>) -> Self {
         Screen {
             pixels: Img::new(vec![PixelType::default(); width * height], width, height),
             global_pal,
-            bg_color,
             disposal: Disposal::default(),
         }
     }
@@ -92,7 +90,7 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
         // Some images contain out-of-pal colors. The fastest way is to extend the palette instead of doing per-pixel checks.
         let pal = &pal[0..256];
 
-        self.disposal.dispose(self.pixels.as_mut(), self.bg_color);
+        self.disposal.dispose(self.pixels.as_mut());
         self.disposal = Disposal::new(method, left, top, buffer.width() as u16, buffer.height() as u16, self.pixels.as_ref());
 
         for (dst, src) in self.pixels.sub_image_mut(left.into(), top.into(), buffer.width(), buffer.height()).pixels_mut().zip(buffer.pixels()) {

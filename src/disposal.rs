@@ -10,7 +10,7 @@ pub struct Disposal<Pixel> {
     width: u16, height: u16,
 }
 
-impl<Pixel: Copy> Default for Disposal<Pixel> {
+impl<Pixel: Copy + Default> Default for Disposal<Pixel> {
     fn default() -> Self {
         Disposal {
            method: gif::DisposalMethod::Keep,
@@ -20,14 +20,17 @@ impl<Pixel: Copy> Default for Disposal<Pixel> {
    }
 }
 
-impl<Pixel: Copy> Disposal<Pixel> {
-    pub fn dispose(&mut self, mut pixels: ImgRefMut<'_, Pixel>, bg_color: Pixel) {
+impl<Pixel: Copy + Default> Disposal<Pixel> {
+    pub fn dispose(&mut self, mut pixels: ImgRefMut<'_, Pixel>) {
         if self.width == 0 || self.height == 0 {
             return;
         }
 
         match self.method {
-            Background => for px in pixels.pixels_mut() { *px = bg_color; },
+            Background => {
+                let bg = Pixel::default();
+                for px in pixels.pixels_mut() { *px = bg; }
+            },
             Previous => if let Some(saved) = self.previous_pixels.take() {
                 for (px, &src) in pixels.sub_image_mut(self.left.into(), self.top.into(), self.width.into(), self.height.into()).pixels_mut().zip(saved.iter()) { *px = src; }
             },
