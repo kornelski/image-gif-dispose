@@ -6,16 +6,16 @@ readme = "README.md"
 description = "Implements GIF disposal method for the gif crate. The gif crate only exposes raw frame data that is not sufficient to render GIFs properly. GIF requires special composing of frames which, as this crate shows, is non-trivial."
 keywords = ["gif", "frames", "animation"]
 documentation = "https://docs.rs/gif-dispose/"
-homepage = "https://crates.rs/image-gif-dispose"
+homepage = "https://lib.rs/gif-dispose"
 repository = "https://github.com/kornelski/image-gif-dispose.git"
 categories = [ "multimedia::video", "multimedia::images" ]
-version = "2.4.0"
+version = "2.4.1"
 edition = "2018"
 
 [dependencies]
 gif = "0.10.3"
-imgref = "1.5.0"
-rgb = "0.8.17"
+imgref = "1.6.1"
+rgb = "0.8.20"
 
 [dev-dependencies]
-lodepng = "2.6.0"
+lodepng = "3.0.0"
