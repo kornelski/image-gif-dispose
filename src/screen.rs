@@ -1,19 +1,3 @@
-//! ```rust,ignore
-//! let file = File::open("example.gif")?;
-//! let mut decoder = Decoder::new(file);
-//!
-//! // Important:
-//! decoder.set(gif::ColorOutput::Indexed);
-//!
-//! let mut reader = decoder.read_info()?;
-//!
-//! let mut screen = Screen::new_reader(&reader);
-//! while let Some(frame) = reader.read_next_frame()? {
-//!     screen.blit_frame(&frame)?;
-//!     screen.pixels // that's the frame now
-//! }
-//! ```
-
 use super::Error;
 use crate::disposal::Disposal;
 use imgref::*;
@@ -35,9 +19,9 @@ impl Screen<RGBA8> {
     /// Initialize an empty RGBA screen from the GIF Reader.
     ///
     /// Make sure Reader is set to use Indexed color.
-    /// `decoder.set(gif::ColorOutput::Indexed);`
-    pub fn new_reader<T: io::Read>(reader: &gif::Reader<T>) -> Self {
-        Self::from_reader(reader)
+    /// `options.set_color_output(gif::ColorOutput::Indexed);`
+    pub fn new_decoder<T: io::Read>(reader: &gif::Decoder<T>) -> Self {
+        Self::from_decoder(reader)
     }
 }
 
@@ -45,7 +29,7 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
     /// Create an new `Screen` with any pixel type
     ///
     /// You may need type hints or use the `screen.pixels` to tell Rust whether you want `RGB8` or `RGBA8`.
-    pub fn from_reader<T: io::Read>(reader: &gif::Reader<T>) -> Self {
+    pub fn from_decoder<T: io::Read>(reader: &gif::Decoder<T>) -> Self {
         let pal = reader.global_palette().map(convert_pixels);
 
         Self::new(reader.width().into(), reader.height().into(), PixelType::default(), pal)

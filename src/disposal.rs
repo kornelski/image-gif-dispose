@@ -1,4 +1,3 @@
-use gif;
 use gif::DisposalMethod::*;
 use imgref::*;
 use std::default::Default;

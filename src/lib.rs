@@ -4,21 +4,22 @@
 //! to render GIFs properly. GIF requires special composing of frames
 //! which, as this crate shows, is non-trivial.
 //!
-//! ```rust,ignore
-//! let file = File::open("example.gif")?;
-//! let mut decoder = Decoder::new(file);
+//! ```rust,no_run
+//! let file = std::fs::File::open("example.gif")?;
 //!
+//! let mut gif_opts = gif::DecodeOptions::new();
 //! // Important:
-//! decoder.set(gif::ColorOutput::Indexed);
+//! gif_opts.set_color_output(gif::ColorOutput::Indexed);
 //!
-//! let mut reader = decoder.read_info()?;
+//! let mut decoder = gif_opts.read_info(file)?;
+//! let mut screen = gif_dispose::Screen::new_decoder(&decoder);
 //!
-//! let mut screen = Screen::new_reader(&reader);
-//! while let Some(frame) = reader.read_next_frame()? {
+//! while let Some(frame) = decoder.read_next_frame()? {
 //!     screen.blit_frame(&frame)?;
-//!     screen.pixels // that's the frame now
+//!     screen.pixels.clone(); // that's the frame now in RGBA format
 //! }
-//!
+//! # Ok::<_, Box<dyn std::error::Error>>(())
+//! ```
 
 mod disposal;
 mod screen;
