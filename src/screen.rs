@@ -66,9 +66,7 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
         if pal.len() < 256 {
             tmp = Vec::with_capacity(256);
             tmp.extend_from_slice(pal);
-            while tmp.len() < 256 {
-                tmp.push(Default::default());
-            }
+            tmp.resize(256, Default::default());
             pal = &tmp;
         };
         // Some images contain out-of-pal colors. The fastest way is to extend the palette instead of doing per-pixel checks.
