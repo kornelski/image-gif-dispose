@@ -25,13 +25,14 @@ impl<Pixel: Copy + Default> Disposal<Pixel> {
             return;
         }
 
+        let mut dest = pixels.sub_image_mut(self.left.into(), self.top.into(), self.width.into(), self.height.into());
         match self.method {
             Background => {
                 let bg = Pixel::default();
-                for px in pixels.pixels_mut() { *px = bg; }
+                for px in dest.pixels_mut() { *px = bg; }
             },
             Previous => if let Some(saved) = self.previous_pixels.take() {
-                for (px, &src) in pixels.sub_image_mut(self.left.into(), self.top.into(), self.width.into(), self.height.into()).pixels_mut().zip(saved.iter()) { *px = src; }
+                for (px, &src) in dest.pixels_mut().zip(saved.iter()) { *px = src; }
             },
             Keep | Any => {},
         }
