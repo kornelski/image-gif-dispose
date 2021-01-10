@@ -14,8 +14,11 @@ edition = "2018"
 
 [dependencies]
 gif = "0.11.1"
-imgref = "1.7.0"
+imgref = "1.7.1"
 rgb = "0.8.25"
 
 [dev-dependencies]
 lodepng = "3.2.2"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
