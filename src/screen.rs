@@ -4,7 +4,7 @@ use imgref::*;
 use rgb::*;
 use std::io;
 
-/// Combined GIF frames forming a "virtual screen"
+/// Combined GIF frames forming a "virtual screen". See [Screen::new_decoder].
 ///
 /// Pixel type can be `RGB8` or `RGBA8`. The size is overall GIF size (grater or equal individual frame sizes).
 pub struct Screen<PixelType = RGBA8> {
@@ -16,9 +16,9 @@ pub struct Screen<PixelType = RGBA8> {
 }
 
 impl Screen<RGBA8> {
-    /// Initialize an empty RGBA screen from the GIF Reader.
+    /// Create an new `Screen` with RGBA pixel type (the best choice for GIF)
     ///
-    /// Make sure Reader is set to use Indexed color.
+    /// Make sure Reader is set to use `Indexed` color.
     /// `options.set_color_output(gif::ColorOutput::Indexed);`
     pub fn new_decoder<T: io::Read>(reader: &gif::Decoder<T>) -> Self {
         Self::from_decoder(reader)
@@ -26,13 +26,16 @@ impl Screen<RGBA8> {
 }
 
 impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
-    /// Create an new `Screen` with any pixel type
+    /// Create an new `Screen` with either `RGB8` or `RGBA8` pixel type. Allows ignoring transparency.
     ///
     /// You may need type hints or use the `screen.pixels` to tell Rust whether you want `RGB8` or `RGBA8`.
+    #[must_use]
     pub fn from_decoder<T: io::Read>(reader: &gif::Decoder<T>) -> Self {
+        let w = reader.width();
+        let h = reader.height();
         let pal = reader.global_palette().map(convert_pixels);
 
-        Self::new(reader.width().into(), reader.height().into(), PixelType::default(), pal)
+        Self::new(w.into(), h.into(), PixelType::default(), pal)
     }
 
     /// Manual setup of the canvas. You probably should use `from_reader` instead.
@@ -40,6 +43,7 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
     /// `bg_color` argument will be ignored. It appears that nobody tries to follow the GIF spec,
     /// and background must always be transparent.
     #[inline]
+    #[must_use]
     pub fn new(width: usize, height: usize, _bg_color: PixelType, global_pal: Option<Vec<PixelType>>) -> Self {
         Screen {
             pixels: Img::new(vec![PixelType::default(); width * height], width, height),

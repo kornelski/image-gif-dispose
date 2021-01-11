@@ -1,4 +1,4 @@
-//! Implements GIF disposal method for the gif crate.
+//! Implements GIF disposal method for the [gif crate](https://lib.rs/crates/gif).
 //!
 //! The gif crate only exposes raw frame data that is not sufficient
 //! to render GIFs properly. GIF requires special composing of frames
@@ -32,6 +32,7 @@ use std::fmt;
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum Error {
+    /// GIF must have either a global palette set, or per-frame palette set. If there is none, it's not possible to render.
     NoPalette,
 }
 
