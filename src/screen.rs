@@ -62,8 +62,14 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
             ImgRef::new(&frame.buffer, frame.width.into(), frame.height.into()), frame.transparent)
     }
 
+
     /// Low-level version of `blit_frame`
     pub fn blit(&mut self, local_pal: Option<&[PixelType]>, method: gif::DisposalMethod, left: u16, top: u16, buffer: ImgRef<'_, u8>, transparent: Option<u8>) -> Result<ImgRef<'_, PixelType>, Error> {
+        self.dispose().then_blit(local_pal, method, left, top, buffer, transparent)?;
+        Ok(self.pixels.as_ref())
+    }
+
+    fn blit_without_dispose(&mut self, local_pal: Option<&[PixelType]>, method: gif::DisposalMethod, left: u16, top: u16, buffer: ImgRef<'_, u8>, transparent: Option<u8>) -> Result<(), Error> {
         let mut pal = local_pal.or(self.global_pal.as_deref()).ok_or(Error::NoPalette)?;
         let mut tmp;
         // For backwards-compat only
@@ -76,7 +82,6 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
         // Some images contain out-of-pal colors. The fastest way is to extend the palette instead of doing per-pixel checks.
         let pal = &pal[0..256];
 
-        self.disposal.dispose(self.pixels.as_mut());
         self.disposal = Disposal::new(method, left, top, buffer.width() as u16, buffer.height() as u16, self.pixels.as_ref());
 
         for (dst, src) in self.pixels.sub_image_mut(left.into(), top.into(), buffer.width(), buffer.height()).pixels_mut().zip(buffer.pixels()) {
@@ -85,8 +90,63 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
             }
             *dst = pal[src as usize];
         }
+        Ok(())
+    }
 
-        Ok(self.pixels.as_ref())
+    #[inline(always)]
+    #[doc(hidden)]
+    pub fn pixels(&mut self) -> ImgRef<'_, PixelType> {
+        self.pixels.as_ref()
+    }
+
+    /// Advanced usage. You do not need to call this. It exposes an incompletely-drawn screen.
+    ///
+    /// Call to this method must always be followed by `.then_blit()` to fix the incomplete state.
+    ///
+    /// The state is after previous frame has been disposed, but before the next frame has been drawn.
+    /// This state is never visible on screen.
+    ///
+    /// This method is for GIF encoders to help find minimal difference between frames, especially
+    /// when transparency is involved ("background" disposal method).
+    ///
+    /// ```rust
+    /// # fn example(buffer: imgref::ImgRef<u8>) -> Result<(), gif_dispose::Error> {
+    /// use gif_dispose::*;
+    /// let mut screen = Screen::new(320, 200, RGBA8::new(0,0,0,0), None);
+    /// let mut tmp_screen = screen.dispose();
+    /// let incomplete_pixels = tmp_screen.pixels();
+    /// tmp_screen.then_blit(None, gif::DisposalMethod::Keep, 0, 0, buffer, None)?;
+    /// # Ok(()) }
+    /// ```
+    #[inline]
+    pub fn dispose(&mut self) -> TempDisposedStateScreen<'_, PixelType> {
+        self.disposal.dispose(self.pixels.as_mut());
+        TempDisposedStateScreen(self, false)
+    }
+}
+
+
+/// Screen that has a temporary state between frames
+#[must_use]
+pub struct TempDisposedStateScreen<'screen, PixelType>(&'screen mut Screen<PixelType>, bool);
+
+impl<T> Drop for TempDisposedStateScreen<'_, T> {
+    fn drop(&mut self) {
+        debug_assert!(self.1, "You must always call then_blit() on TempDisposedStateScreen from dispose()")
+    }
+}
+
+impl<'s, PixelType: From<RGB8> + Copy + Default> TempDisposedStateScreen<'s, PixelType> {
+    #[inline(always)]
+    pub fn then_blit(&mut self, local_pal: Option<&[PixelType]>, method: gif::DisposalMethod, left: u16, top: u16, buffer: ImgRef<'_, u8>, transparent: Option<u8>) -> Result<(), Error> {
+        self.1 = true;
+        self.0.blit_without_dispose(local_pal, method, left, top, buffer, transparent)
+    }
+
+    /// Access pixels in the in-between state
+    #[inline(always)]
+    pub fn pixels(&mut self) -> ImgRef<'_, PixelType> {
+        self.0.pixels.as_ref()
     }
 }
 

@@ -9,7 +9,7 @@ documentation = "https://docs.rs/gif-dispose/"
 homepage = "https://lib.rs/gif-dispose"
 repository = "https://github.com/kornelski/image-gif-dispose.git"
 categories = [ "multimedia::video", "multimedia::images" ]
-version = "3.0.1"
+version = "3.1.0"
 edition = "2018"
 
 [dependencies]
