@@ -121,25 +121,24 @@ impl<PixelType: From<RGB8> + Copy + Default> Screen<PixelType> {
     #[inline]
     pub fn dispose(&mut self) -> TempDisposedStateScreen<'_, PixelType> {
         self.disposal.dispose(self.pixels.as_mut());
-        TempDisposedStateScreen(self, false)
+        TempDisposedStateScreen(self)
     }
 }
 
 
 /// Screen that has a temporary state between frames
 #[must_use]
-pub struct TempDisposedStateScreen<'screen, PixelType>(&'screen mut Screen<PixelType>, bool);
+pub struct TempDisposedStateScreen<'screen, PixelType>(&'screen mut Screen<PixelType>);
 
+/// Extends borrow to the end of scope, reminding to use `then_blit`
 impl<T> Drop for TempDisposedStateScreen<'_, T> {
     fn drop(&mut self) {
-        debug_assert!(self.1, "You must always call then_blit() on TempDisposedStateScreen from dispose()")
     }
 }
 
 impl<'s, PixelType: From<RGB8> + Copy + Default> TempDisposedStateScreen<'s, PixelType> {
     #[inline(always)]
-    pub fn then_blit(&mut self, local_pal: Option<&[PixelType]>, method: gif::DisposalMethod, left: u16, top: u16, buffer: ImgRef<'_, u8>, transparent: Option<u8>) -> Result<(), Error> {
-        self.1 = true;
+    pub fn then_blit(self, local_pal: Option<&[PixelType]>, method: gif::DisposalMethod, left: u16, top: u16, buffer: ImgRef<'_, u8>, transparent: Option<u8>) -> Result<(), Error> {
         self.0.blit_without_dispose(local_pal, method, left, top, buffer, transparent)
     }
 
