@@ -1,7 +1,7 @@
 [package]
 authors = ["Kornel Lesiński <kornel@geekhood.net>"]
 name = "gif-dispose"
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 description = "Implements GIF disposal method for the gif crate. The gif crate only exposes raw frame data that is not sufficient to render GIFs properly. GIF requires special composing of frames which, as this crate shows, is non-trivial."
 keywords = ["gif", "frames", "animation"]
@@ -9,16 +9,19 @@ documentation = "https://docs.rs/gif-dispose/"
 homepage = "https://lib.rs/gif-dispose"
 repository = "https://github.com/kornelski/image-gif-dispose.git"
 categories = [ "multimedia::video", "multimedia::images" ]
-version = "3.1.1"
+version = "4.0.0"
 edition = "2018"
 
 [dependencies]
-gif = "0.11.1"
-imgref = "1.7.1"
-rgb = "0.8.25"
+gif = "0.12.0"
+imgref = "1.9.4"
+rgb = "0.8.34"
 
 [dev-dependencies]
-lodepng = "3.2.2"
+lodepng = "3.7.2"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
+
+[badges]
+maintenance = { status = "actively-developed" }
