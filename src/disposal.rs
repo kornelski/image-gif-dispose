@@ -1,20 +1,21 @@
+use rgb::RGBA8;
 use gif::DisposalMethod;
 use imgref::*;
 use std::default::Default;
 
-enum SavedState<Pixel> {
-    Previous(Vec<Pixel>),
+enum SavedState {
+    Previous(Vec<RGBA8>),
     Background,
     Keep,
 }
 
-pub struct Disposal<Pixel> {
-    saved: SavedState<Pixel>,
+pub struct Disposal {
+    saved: SavedState,
     left: u16, top: u16,
     width: u16, height: u16,
 }
 
-impl<Pixel: Copy + Default> Default for Disposal<Pixel> {
+impl Default for Disposal {
     fn default() -> Self {
         Disposal {
            saved: SavedState::Keep,
@@ -23,8 +24,8 @@ impl<Pixel: Copy + Default> Default for Disposal<Pixel> {
    }
 }
 
-impl<Pixel: Copy + Default> Disposal<Pixel> {
-    pub fn dispose(&self, mut pixels: ImgRefMut<'_, Pixel>) {
+impl Disposal {
+    pub fn dispose(&self, mut pixels: ImgRefMut<'_, RGBA8>) {
         if self.width == 0 || self.height == 0 {
             return;
         }
@@ -32,7 +33,7 @@ impl<Pixel: Copy + Default> Disposal<Pixel> {
         let mut dest = pixels.sub_image_mut(self.left.into(), self.top.into(), self.width.into(), self.height.into());
         match &self.saved {
             SavedState::Background => {
-                let bg = Pixel::default();
+                let bg = RGBA8::default();
                 for px in dest.pixels_mut() { *px = bg; }
             },
             SavedState::Previous(saved) => {
@@ -42,7 +43,7 @@ impl<Pixel: Copy + Default> Disposal<Pixel> {
         }
     }
 
-    pub fn new(method: gif::DisposalMethod, left: u16, top: u16, width: u16, height: u16, pixels: ImgRef<'_, Pixel>) -> Self {
+    pub fn new(method: gif::DisposalMethod, left: u16, top: u16, width: u16, height: u16, pixels: ImgRef<'_, RGBA8>) -> Self {
         Disposal {
             saved: match method {
                 DisposalMethod::Previous => SavedState::Previous(pixels.sub_image(left.into(), top.into(), width.into(), height.into()).pixels().collect()),

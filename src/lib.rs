@@ -16,7 +16,8 @@
 //!
 //! while let Some(frame) = decoder.read_next_frame()? {
 //!     screen.blit_frame(&frame)?;
-//!     screen.pixels.clone(); // that's the frame now in RGBA format
+//!     let _ = screen.pixels_rgba().clone(); // that's the frame now in RGBA format
+//!     let _ = screen.pixels_rgba().to_contiguous_buf(); // that works too
 //! }
 //! # Ok::<_, Box<dyn std::error::Error>>(())
 //! ```
@@ -27,11 +28,13 @@ mod screen;
 pub use crate::screen::Screen;
 pub use crate::screen::TempDisposedStateScreen;
 pub use rgb::{RGB8, RGBA8};
+pub use imgref::ImgRef;
 
 use std::error::Error as StdError;
 use std::fmt;
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
+#[non_exhaustive]
 pub enum Error {
     /// GIF must have either a global palette set, or per-frame palette set. If there is none, it's not possible to render.
     NoPalette,

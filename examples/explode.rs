@@ -17,7 +17,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let frame_file = format!("{}-{:04}.png", base_name, n);
         println!("{}", frame_file);
-        lodepng::encode32_file(frame_file, &screen.pixels.buf(), screen.pixels.width(), screen.pixels.height())?;
+        let (buf, width, height) = screen.pixels_rgba().to_contiguous_buf();
+        lodepng::encode32_file(frame_file, &buf, width, height)?;
         n += 1;
     }
 
