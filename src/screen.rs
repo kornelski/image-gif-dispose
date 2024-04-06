@@ -111,6 +111,14 @@ impl Screen {
         self.next_disposal.dispose(self.internal_pixels.as_mut());
         TempDisposedStateScreen(self)
     }
+
+    #[must_use] pub fn width(&self) -> usize {
+        self.internal_pixels.width()
+    }
+
+    #[must_use] pub fn height(&self) -> usize {
+        self.internal_pixels.height()
+    }
 }
 
 
