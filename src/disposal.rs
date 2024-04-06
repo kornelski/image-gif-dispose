@@ -1,7 +1,6 @@
-use rgb::RGBA8;
 use gif::DisposalMethod;
-use imgref::*;
-use std::default::Default;
+use imgref::{ImgRef, ImgRefMut};
+use rgb::RGBA8;
 
 enum SavedState {
     Previous(Vec<RGBA8>),

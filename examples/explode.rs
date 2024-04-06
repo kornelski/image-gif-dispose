@@ -13,10 +13,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut screen = gif_dispose::Screen::new_decoder(&decoder);
     let mut n = 1;
     while let Some(frame) = decoder.read_next_frame()? {
-        screen.blit_frame(&frame)?;
+        screen.blit_frame(frame)?;
 
-        let frame_file = format!("{}-{:04}.png", base_name, n);
-        println!("{}", frame_file);
+        let frame_file = format!("{base_name}-{n:04}.png");
+        println!("{frame_file}");
         let (buf, width, height) = screen.pixels_rgba().to_contiguous_buf();
         lodepng::encode32_file(frame_file, &buf, width, height)?;
         n += 1;

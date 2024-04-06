@@ -1,10 +1,11 @@
 use super::Error;
 use crate::disposal::Disposal;
-use imgref::*;
-use rgb::*;
+use imgref::{Img, ImgRef, ImgVec};
+use rgb::FromSlice;
+use rgb::{RGB8, RGBA8};
 use std::io;
 
-/// Combined GIF frames forming a "virtual screen". See [Screen::new_decoder].
+/// Combined GIF frames forming a "virtual screen". See [`Screen::new_decoder`].
 ///
 /// Pixel type can be `RGB8` or `RGBA8`. The size is overall GIF size (grater or equal individual frame sizes).
 pub struct Screen {
@@ -50,7 +51,6 @@ impl Screen {
             frame.left, frame.top,
             ImgRef::new(&frame.buffer, frame.width.into(), frame.height.into()), frame.transparent)
     }
-
 
     /// Low-level version of `blit_frame`
     pub fn blit(&mut self, local_pal: Option<&[RGB8]>, method: gif::DisposalMethod, left: u16, top: u16, buffer: ImgRef<'_, u8>, transparent: Option<u8>) -> Result<(), Error> {
@@ -112,15 +112,16 @@ impl Screen {
         TempDisposedStateScreen(self)
     }
 
-    #[must_use] pub fn width(&self) -> usize {
+    #[must_use]
+    pub fn width(&self) -> usize {
         self.internal_pixels.width()
     }
 
-    #[must_use] pub fn height(&self) -> usize {
+    #[must_use]
+    pub fn height(&self) -> usize {
         self.internal_pixels.height()
     }
 }
-
 
 /// Screen that has a temporary state between frames
 #[must_use]
@@ -143,7 +144,6 @@ impl<'s, > TempDisposedStateScreen<'s> {
     pub fn pixels_rgba(&mut self) -> ImgRef<'_, RGBA8> {
         self.0.internal_pixels.as_ref()
     }
-
 
     /// Use [`pixels_rgba`]
     #[deprecated(note = "use pixels_rgba() instead. This method will return a different type in the next version")]

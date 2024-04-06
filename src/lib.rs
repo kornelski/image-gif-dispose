@@ -27,8 +27,8 @@ mod screen;
 
 pub use crate::screen::Screen;
 pub use crate::screen::TempDisposedStateScreen;
-pub use rgb::{RGB8, RGBA8};
 pub use imgref::ImgRef;
+pub use rgb::{RGB8, RGBA8};
 
 use std::error::Error as StdError;
 use std::fmt;
