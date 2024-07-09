@@ -1,7 +1,7 @@
+use rgb::bytemuck;
 use super::Error;
 use crate::disposal::Disposal;
 use imgref::{Img, ImgRef, ImgVec};
-use rgb::FromSlice;
 use rgb::{RGB8, RGBA8};
 use std::io;
 
@@ -25,7 +25,7 @@ impl Screen {
     pub fn new_decoder<T: io::Read>(reader: &gif::Decoder<T>) -> Self {
         let w = reader.width();
         let h = reader.height();
-        let pal = reader.global_palette().map(|pal| pal.as_rgb());
+        let pal = reader.global_palette().map(bytemuck::cast_slice);
         Self::new(w.into(), h.into(), pal)
     }
 
@@ -46,8 +46,8 @@ impl Screen {
     ///
     /// Use `pixels_rgba()` to get pixels afterwards
     pub fn blit_frame(&mut self, frame: &gif::Frame<'_>) -> Result<(), Error> {
-        let local_pal = frame.palette.as_deref().map(|p| p.as_rgb());
-        self.blit(local_pal.map(|p| &p[..]), frame.dispose,
+        let local_pal = frame.palette.as_deref().map(bytemuck::cast_slice);
+        self.blit(local_pal, frame.dispose,
             frame.left, frame.top,
             ImgRef::new(&frame.buffer, frame.width.into(), frame.height.into()), frame.transparent)
     }
@@ -70,7 +70,7 @@ impl Screen {
             if Some(src) == transparent {
                 continue;
             }
-            *dst = pal[src as usize].alpha(255);
+            *dst = pal[src as usize].with_alpha(255);
         }
         Ok(())
     }

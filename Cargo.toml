@@ -9,14 +9,14 @@ documentation = "https://docs.rs/gif-dispose/"
 homepage = "https://lib.rs/gif-dispose"
 repository = "https://github.com/kornelski/image-gif-dispose.git"
 categories = [ "multimedia::video", "multimedia::images" ]
-version = "5.0.0"
+version = "5.0.1"
 edition = "2021"
-rust-version = "1.60"
+rust-version = "1.64"
 
 [dependencies]
-gif = { version = "0.13", default-features = false, features = ["std"] }
-imgref = "1.9.4"
-rgb = "0.8.34"
+gif = { version = "0.13.1", default-features = false, features = ["std"] }
+imgref = "1.10.1"
+rgb = { version = "0.8.43", default-features = false, features = ["bytemuck"] }
 
 [dev-dependencies]
 lodepng = "3.10.1"
